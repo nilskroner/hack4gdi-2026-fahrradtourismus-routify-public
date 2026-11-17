@@ -1,0 +1,28 @@
+# macOS / Windows / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Private Einstellungen (Vorlage: .env.example)
+.env
+
+# Entsteht beim Start / bei der Nutzung
+data/routify.db
+data/zertifikat/
+data/brouter/customprofiles/
+data/prepared/ortssuche_cache.json
+*.tmp
+
+# Wird beim ersten Start heruntergeladen (code/scripts/pruefen.py)
+data/brouter/app/
+data/brouter/segments4/
+data/whisper/
+
+# Wird bei Bedarf von code/scripts/prepare_data.py heruntergeladen
+data/poi-open/

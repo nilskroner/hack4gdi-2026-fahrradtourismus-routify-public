@@ -1,0 +1,6 @@
+# Windows-Skripte mit CRLF, Shell-Skripte mit LF auschecken
+*.bat text eol=crlf
+*.sh  text eol=lf
+# Daten nicht als Text behandeln (kein Zeilenenden-Umbau, kein Diff)
+*.geojson binary
+*.mp4 binary

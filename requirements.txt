@@ -1,0 +1,13 @@
+# Python-Pakete für Backend und Datenaufbereitung
+# Installation: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+fastapi==0.162.5
+uvicorn[standard]==0.54.0
+httpx==0.28.1
+shapely==2.2.0
+numpy==2.5.4
+# Linked Data: Ontologie, RDF-Export, SPARQL, SHACL-Prüfung
+rdflib==7.6.0
+pyshacl==0.40.2
+# Spracheingabe lokal (Whisper); av < 16, weil faster-whisper 1.2.1 mit av 16+ nicht startet
+faster-whisper==1.2.1
+av==15.1.0

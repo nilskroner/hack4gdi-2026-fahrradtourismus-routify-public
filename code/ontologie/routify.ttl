@@ -1,0 +1,151 @@
+@prefix rtf:    <https://w3id.org/routify/ontologie#> .
+@prefix gdi:    <https://registry.gdi-de.org/up3/ontology/> .
+@prefix schema: <https://schema.org/> .
+@prefix gsp:    <http://www.opengis.net/ont/geosparql#> .
+@prefix dct:    <http://purl.org/dc/terms/> .
+@prefix prov:   <http://www.w3.org/ns/prov#> .
+@prefix owl:    <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:   <http://www.w3.org/2004/02/skos/core#> .
+
+# =====================================================================================================
+# Routify-Ontologie – leichte Anwendungsontologie für geplante Radtouren (hack4GDI 2026, Challenge 1)
+#
+# Baut auf der Radnetz-Ontologie der GDI-DE / des BALM (v6) auf und ergänzt nur, was eine Tourplanung
+# zusätzlich braucht: Etappen (Tagesabschnitte), Übernachtungen, Notausstiege, Halte unterwegs,
+# Wetter je Etappe und die Herkunft (Provenienz) jedes Objekts.
+#
+#   Radnetz-Ontologie: https://github.com/Cprudhomme/gdi-anforderung-ontologie-radnetz-documentation
+#   Namensraum rtf: ist ein Platzhalter (w3id) für den Prototyp.
+# =====================================================================================================
+
+<https://w3id.org/routify/ontologie> a owl:Ontology ;
+    rdfs:label "Routify-Ontologie"@de , "Routify ontology"@en ;
+    dct:description "Anwendungsontologie für sprachgesteuerte Radtourenplanung auf amtlichen und offenen Geodaten."@de ;
+    owl:versionInfo "1.0 (hack4GDI 2026)" ;
+    owl:imports <https://registry.gdi-de.org/up3/ontology/> ;
+    dct:creator "Team Pedal to the Metal" ;
+    dct:license <https://creativecommons.org/licenses/by/4.0/> .
+
+# ----------------------------------------------------------------------------- Tour und Etappen
+
+rtf:Tour a owl:Class ;
+    rdfs:subClassOf gdi:TouristenRoute ;
+    rdfs:label "Tour"@de , "Tour"@en ;
+    rdfs:comment "Eine mit Routify geplante Radtour von einem Start zu einem Ziel (oder Rundtour), bestehend aus Etappen."@de .
+
+rtf:Etappe a owl:Class ;
+    rdfs:subClassOf gdi:Streckenabschnitt ;
+    rdfs:label "Etappe"@de , "Stage"@en ;
+    rdfs:comment "Tagesabschnitt einer Tour. Länge in Metern über gdi:laenge wie im Radnetz-Modell; maximale Steigung über rtf:maxSteigung."@de .
+
+rtf:Etappenpunkt a owl:Class ;
+    rdfs:subClassOf gdi:Knoten ;
+    rdfs:label "Etappenpunkt"@de , "Stage point"@en ;
+    rdfs:comment "Start, Ende eines Tages oder Ziel einer Tour (Knoten im Sinne des Radnetz-Modells)."@de .
+
+rtf:Anfrage a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Anfrage"@de , "Request"@en ;
+    rdfs:comment "Die gesprochene oder geschriebene Nutzeranfrage. Das Sprachmodell extrahiert daraus nur Parameter; die Tour wird daraus regelbasiert berechnet (prov:wasGeneratedBy)."@de .
+
+rtf:Wetterlage a owl:Class ;
+    rdfs:label "Wetterlage"@de , "Weather"@en ;
+    rdfs:comment "Vorhersage (DWD) für eine Etappe am geplanten Tag, 9–18 Uhr."@de .
+
+rtf:Datensatz a owl:Class ;
+    rdfs:subClassOf prov:Entity , dct:Dataset ;
+    rdfs:label "Datensatz"@de , "Dataset"@en ;
+    rdfs:comment "Quelle, aus der ein Objekt stammt (z. B. BKG POI-Open, OpenStreetMap, BRouter)."@de .
+
+# ----------------------------------------------------------------------------- Orte unterwegs
+
+rtf:Ort a owl:Class ;
+    rdfs:subClassOf schema:Place , gsp:Feature ;
+    rdfs:label "Ort unterwegs"@de , "Place along the route"@en .
+
+rtf:Unterkunft a owl:Class ; rdfs:subClassOf rtf:Ort , schema:LodgingBusiness ;
+    rdfs:label "Unterkunft"@de , "Accommodation"@en .
+rtf:EtappeMitUebernachtung a owl:Class ; rdfs:subClassOf rtf:Etappe ;
+    rdfs:label "Etappe mit Übernachtung"@de , "stage with overnight stay"@en ;
+    rdfs:comment "Etappe, an deren Ende übernachtet wird (alle außer der letzten). Ziel der Übernachtungs-Regeln in der SHACL-Prüfung."@de .
+
+rtf:Campingplatz a owl:Class ; rdfs:subClassOf rtf:Unterkunft , schema:Campground ;
+    rdfs:label "Campingplatz"@de , "Campsite"@en .
+
+rtf:Bahnhof a owl:Class ; rdfs:subClassOf rtf:Ort , schema:TrainStation ;
+    rdfs:label "Bahnhof"@de , "Train station"@en ;
+    rdfs:comment "Möglicher Notausstieg (Bahnhof mit Zugverkehr ≤ 5 km von der Route)."@de .
+
+rtf:Fahrradservice a owl:Class ; rdfs:subClassOf rtf:Ort , schema:LocalBusiness ;
+    rdfs:label "Fahrradservice"@de , "Bicycle service"@en ;
+    rdfs:comment "Fahrradladen, Verleih oder Reparaturstation."@de .
+
+rtf:Halt a owl:Class ; rdfs:subClassOf rtf:Ort ;
+    rdfs:label "Halt unterwegs"@de , "Stop"@en ;
+    rdfs:comment "Vom Nutzer gewünschter Halt (z. B. Fahrradwerkstatt oder Verleih unterwegs)."@de .
+
+# ----------------------------------------------------------------------------- Beziehungen
+
+rtf:hatEtappe a owl:ObjectProperty ; rdfs:subPropertyOf gdi:hatStreckenabschnitt ;
+    rdfs:domain rtf:Tour ; rdfs:range rtf:Etappe ; rdfs:label "hat Etappe"@de .
+
+rtf:folgtRadweg a owl:ObjectProperty ; rdfs:domain rtf:Tour ; rdfs:range gdi:Route ;
+    rdfs:label "folgt Radweg"@de ; rdfs:comment "Benannter Radfernweg, dem die Tour folgt (z. B. Elberadweg)."@de .
+
+rtf:fuehrtUeber a owl:ObjectProperty ; rdfs:domain rtf:Tour ; rdfs:range rtf:Ort ;
+    rdfs:label "führt über"@de ; rdfs:comment "Zwischenziel oder gewählter Halt, über den die Tour geroutet wird."@de .
+
+rtf:uebernachtungIn a owl:ObjectProperty ; rdfs:domain rtf:Etappe ; rdfs:range rtf:Unterkunft ;
+    rdfs:label "Übernachtung in"@de ; rdfs:comment "Gewählte Unterkunft am Ende der Etappe (Route führt dorthin)."@de .
+
+rtf:unterkunftsvorschlag a owl:ObjectProperty ; rdfs:domain rtf:Etappe ; rdfs:range rtf:Unterkunft ;
+    rdfs:label "Unterkunftsvorschlag"@de .
+
+rtf:notausstieg a owl:ObjectProperty ; rdfs:domain rtf:Etappe ; rdfs:range rtf:Bahnhof ;
+    rdfs:label "Notausstieg"@de .
+
+rtf:liegtAn a owl:ObjectProperty ; rdfs:domain rtf:Ort ; rdfs:range rtf:Tour ;
+    rdfs:label "liegt an"@de ; rdfs:comment "Ort liegt in der Nähe der Tour (Abstand und Routen-km als Datenwerte)."@de .
+
+rtf:hatWetter a owl:ObjectProperty ; rdfs:domain rtf:Etappe ; rdfs:range rtf:Wetterlage ; rdfs:label "hat Wetter"@de .
+
+# Herkunft: prov:wasDerivedFrom (Ort -> rtf:Datensatz), prov:wasGeneratedBy (Tour -> rtf:Anfrage)
+# Geometrie: gsp:hasGeometry / gsp:asWKT (wie im Radnetz-Modell)
+# Verknüpfung: owl:sameAs <http://www.wikidata.org/entity/Q…>, rdfs:seeAlso OSM-Objekt
+
+# ----------------------------------------------------------------------------- Datenwerte
+
+rtf:tagNummer        a owl:DatatypeProperty ; rdfs:domain rtf:Etappe ; rdfs:range xsd:integer ; rdfs:label "Tag"@de .
+rtf:datum            a owl:DatatypeProperty ; rdfs:domain rtf:Etappe ; rdfs:range xsd:date ;    rdfs:label "Datum"@de .
+rtf:anstiegHm        a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "Anstieg (Höhenmeter)"@de .
+rtf:gesamtlaenge     a owl:DatatypeProperty ; rdfs:domain rtf:Tour ; rdfs:range xsd:integer ;
+    rdfs:label "Gesamtlänge (m)"@de , "total length (m)"@en ;
+    rdfs:comment "Länge der ganzen Tour in Metern. Nicht gdi:laenge, weil dessen Domain gdi:Streckenabschnitt ist."@de .
+rtf:maxSteigung      a owl:DatatypeProperty ; rdfs:range xsd:double ;
+    rdfs:label "maximale Steigung (%)"@de , "maximum gradient (%)"@en ;
+    rdfs:comment "Größte Steigung aus dem Höhenprofil (BRouter/SRTM). gdi:steigung beschreibt dagegen die Längsneigung eines Abschnitts."@de .
+rtf:anteilRadweg     a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "Anteil Radweg (0–1)"@de .
+rtf:anteilAsphalt    a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "Anteil Asphalt (0–1)"@de .
+rtf:anteilHauptstrasse a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "Anteil Hauptstraße (0–1)"@de .
+rtf:fahrzeitStunden  a owl:DatatypeProperty ; rdfs:range xsd:decimal ; rdfs:label "geschätzte Fahrzeit (h)"@de .
+rtf:abstandKm        a owl:DatatypeProperty ; rdfs:domain rtf:Ort ; rdfs:range xsd:decimal ; rdfs:label "Abstand zur Route (km)"@de .
+rtf:routenKm         a owl:DatatypeProperty ; rdfs:domain rtf:Ort ; rdfs:range xsd:decimal ; rdfs:label "Lage an der Route (km ab Start)"@de .
+rtf:routingProfil    a owl:DatatypeProperty ; rdfs:domain rtf:Tour ; rdfs:range xsd:string ; rdfs:label "Routing-Profil (BRouter)"@de .
+rtf:zielgruppe       a owl:DatatypeProperty ; rdfs:domain rtf:Tour ; rdfs:range xsd:string ; rdfs:label "Zielgruppe"@de .
+rtf:anfrageText      a owl:DatatypeProperty ; rdfs:domain rtf:Anfrage ; rdfs:range xsd:string ; rdfs:label "Text der Anfrage"@de .
+rtf:parameter        a owl:DatatypeProperty ; rdfs:domain rtf:Anfrage ; rdfs:range xsd:string ;
+    rdfs:label "erkannte Parameter (JSON)"@de ; rdfs:comment "Was das Sprachmodell (nach Prüfung am Text) verstanden hat – nachvollziehbar."@de .
+rtf:regenMm          a owl:DatatypeProperty ; rdfs:domain rtf:Wetterlage ; rdfs:range xsd:decimal ; rdfs:label "Regen (mm)"@de .
+rtf:tMaxC            a owl:DatatypeProperty ; rdfs:domain rtf:Wetterlage ; rdfs:range xsd:decimal ; rdfs:label "Höchsttemperatur (°C)"@de .
+rtf:windKmh          a owl:DatatypeProperty ; rdfs:domain rtf:Wetterlage ; rdfs:range xsd:decimal ; rdfs:label "Wind (km/h)"@de .
+rtf:windRichtungGrad a owl:DatatypeProperty ; rdfs:domain rtf:Wetterlage ; rdfs:range xsd:decimal ; rdfs:label "Windrichtung (Grad)"@de .
+
+# ----------------------------------------------------------------------------- Datensätze (Provenienz)
+
+rtf:ds_poi_open a rtf:Datensatz ; dct:title "BKG POI-Open (Haltestellen)" ; dct:publisher "Bundesamt für Kartographie und Geodäsie" ;
+    dct:license <https://www.govdata.de/dl-de/by-2-0> .
+rtf:ds_osm a rtf:Datensatz ; dct:title "OpenStreetMap" ; dct:license <https://opendatacommons.org/licenses/odbl/> .
+rtf:ds_dwd a rtf:Datensatz ; dct:title "DWD-Vorhersage (MOSMIX) via Bright Sky" ; dct:publisher "Deutscher Wetterdienst" .
+rtf:ds_brouter a rtf:Datensatz ; dct:title "BRouter-Routinggraph (OpenStreetMap, Höhen aus SRTM)" ; dct:license <https://opendatacommons.org/licenses/odbl/> .
